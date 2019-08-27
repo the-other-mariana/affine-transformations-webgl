@@ -1,0 +1,275 @@
+var VSHADER_SOURCE =
+  'attribute vec4 a_Position;\n' +
+  'uniform mat4 u_TranslateMatrix;\n' +
+  'uniform mat4 u_ScaleMatrix;\n' +
+
+  'uniform mat4 u_RotateAux;\n' +
+  'uniform mat4 u_RotateXMatrix;\n' +
+  'uniform mat4 u_RotateYMatrix;\n' +
+  'uniform mat4 u_RotateZMatrix;\n' +
+  'uniform mat4 u_RotateAux2;\n' +
+
+  'attribute vec4 a_Color;\n' +
+  'varying vec4 v_FragColor;\n' +
+  'void main() {\n' +
+  //' u_TransformMatrix = u_TranslateMatrix * u_ScaleMatrix;\n' +
+  //' gl_Position =  u_RotateMatrix * u_ScaleMatrix * u_TranslateMatrix * a_Position;\n'+
+  ' gl_Position =  u_ScaleMatrix * u_TranslateMatrix * u_RotateAux2 * u_RotateZMatrix * u_RotateYMatrix * u_RotateXMatrix * u_RotateAux * a_Position;\n'+
+  ' v_FragColor = a_Color;\n'+
+  ' gl_PointSize = 10.0;\n'+
+  '}\n';
+
+var FSHADER_SOURCE =
+  'precision mediump float;\n' +
+  'varying vec4 v_FragColor;\n' +
+  'void main(){\n'+
+  //' gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n'+
+  ' gl_FragColor = v_FragColor;\n'+
+  '}\n';
+
+var canvas = document.getElementById('webgl');
+var gl = getWebGLContext(canvas);
+
+function main(){
+  if(!gl){
+    console.log('Failed to get the WebGL context');
+    return;
+  }
+
+  if(!initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE)){
+    console.log('Failed to initialize shaders');
+    return;
+  }
+  initTransforms();
+  canvas.onclick = function(ev){ click(ev, gl, canvas); };
+  //canvas.oncontextmenu  = function(ev){ rightClick(ev, gl, canvas);  return false;};
+  gl.clearColor(0.0, 0.0, 0.0, 1.0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  gl.enable(gl.DEPTH_TEST);
+}
+
+var g_points = [[]];
+var g_colors = [[]];
+var clicks = {Value: 0};
+var index = 0;
+var currObject = 0;
+var zPos = 0.0;
+
+var angleX = 0.0;
+var angleY = 0.0;
+var angleZ = 0.0;
+
+function selectObject(event){
+  console.log(parseInt(event.target.value));
+  currObject = parseInt(event.target.value);
+  $("#current-object-field").text("Current object: Object " + (currObject + 1));
+  $("#object-title").text("Object " + (currObject + 1));
+
+  $("#x-translate").val(g_transforms[currObject][0][12]);
+  $("#y-translate").val(g_transforms[currObject][0][13]);
+  $("#z-translate").val(g_transforms[currObject][0][14]);
+
+  // 0 5 10
+  $("#x-scale").val(g_transforms[currObject][1][0]);
+  $("#y-scale").val(g_transforms[currObject][1][5]);
+  $("#z-scale").val(g_transforms[currObject][1][10]);
+
+  $("#x-rotate").val(angleX);
+  $("#y-rotate").val(angleY);
+  $("#z-rotate").val(angleZ);
+}
+
+var g_transforms = [[]]
+
+function getNewTransformMatrix(){
+  var transformMatrix = new Float32Array([
+    1.0, 0.0, 0.0, 0.0,
+    0.0, 1.0, 0.0, 0.0,
+    0.0, 0.0, 1.0, 0.0,
+    0.0, 0.0, 0.0, 1.0
+  ]);
+  return transformMatrix;
+}
+
+function newObject(event){
+  index += 1;
+  g_points.push([]);
+  g_colors.push([]);
+
+  g_transforms.push([])
+  for(var i = 0; i < 7; i++){
+    g_transforms[index].push(getNewTransformMatrix());
+  }
+
+  currObject = index;
+  $("#current-object-field").text("Current object: Object " + (currObject + 1));
+  $("#object-title").text("Object " + (currObject + 1));
+  $("#sidebar").append('<button class = "object-button" onclick = "selectObject(event);" value = ' + (index) + '>Object ' + (index + 1) + '</button>');
+
+  //range bars in zero here
+  console.log("objects: " + g_colors.length);
+}
+
+function updateTextInput(val) {
+  zPos = parseFloat(val);
+  document.getElementById('textInput').value = val;
+}
+
+function centroid(obj){
+  var sum = {x: 0.0, y: 0.0, z: 0.0};
+
+  for(var i = 0; i < g_points[obj].length; i += 3){
+    sum.x += g_points[obj][i];
+    sum.y += g_points[obj][i + 1];
+    sum.z += g_points[obj][i + 2];
+  }
+  sum.x = sum.x / (g_points[obj].length/3.0);
+  sum.y = sum.y / (g_points[obj].length/3.0);
+  sum.z = sum.z / (g_points[obj].length/3.0);
+  return sum;
+}
+
+function initTransforms(){
+  g_transforms.push([]);
+  for(var i = 0; i < 7; i++){
+    g_transforms[0].push(getNewTransformMatrix());
+  }
+}
+function updateTranslate(value, id){
+  if(id == "x-translate"){
+    g_transforms[currObject][0][12] = value;
+  }
+  if(id == "y-translate"){
+    g_transforms[currObject][0][13] = value;
+  }
+  if(id == "z-translate"){
+    g_transforms[currObject][0][14] = value;
+  }
+
+  paint();
+}
+
+function updateScale(value, id){
+  if(id == "x-scale"){
+    g_transforms[currObject][1][0] = value;
+  }
+  if(id == "y-scale"){
+    g_transforms[currObject][1][5] = value;
+  }
+  if(id == "z-scale"){
+    g_transforms[currObject][1][10] = value;
+  }
+
+  paint();
+}
+function updateRotate(value, id){
+  var cosB = Math.cos(value*(3.1416 / 180.0));
+  var sinB = Math.sin(value*(3.1416 / 180.0));
+
+  g_transforms[currObject][2][12] = -1*centroid(currObject).x;
+  g_transforms[currObject][2][13] = -1*centroid(currObject).y;
+  g_transforms[currObject][2][14] = -1*centroid(currObject).z;
+
+  g_transforms[currObject][6][12] = centroid(currObject).x;
+  g_transforms[currObject][6][13] = centroid(currObject).y;
+  g_transforms[currObject][6][14] = centroid(currObject).z;
+
+  if(id == "x-rotate"){
+    angleX = value;
+    g_transforms[currObject][3][5] = cosB;
+    g_transforms[currObject][3][6] = sinB;
+    g_transforms[currObject][3][9] = -1*sinB;
+    g_transforms[currObject][3][10] = cosB;
+  }
+  if(id == "y-rotate"){
+    angleY = value;
+    g_transforms[currObject][4][2] = -1*sinB;
+    g_transforms[currObject][4][8] = sinB;
+    g_transforms[currObject][4][0] = cosB;
+    g_transforms[currObject][4][10] = cosB;
+  }
+  if(id == "z-rotate"){
+    angleZ = value;
+    g_transforms[currObject][5][0] = cosB;
+    g_transforms[currObject][5][1] = sinB;
+    g_transforms[currObject][5][4] = -1*sinB;
+    g_transforms[currObject][5][5] = cosB;
+  }
+  paint();
+}
+// 0: translate matrix
+
+function paint(){
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  //gl.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    for(var i = 0; i < g_points.length; i++){
+
+      var u_TranslateMatrix = gl.getUniformLocation(gl.program, 'u_TranslateMatrix');
+      var u_ScaleMatrix = gl.getUniformLocation(gl.program, 'u_ScaleMatrix');
+
+      var u_RotateAux = gl.getUniformLocation(gl.program, 'u_RotateAux');
+      var u_RotateXMatrix = gl.getUniformLocation(gl.program, 'u_RotateXMatrix');
+      var u_RotateYMatrix = gl.getUniformLocation(gl.program, 'u_RotateYMatrix');
+      var u_RotateZMatrix = gl.getUniformLocation(gl.program, 'u_RotateZMatrix');
+      var u_RotateAux2 = gl.getUniformLocation(gl.program, 'u_RotateAux2');
+
+      gl.uniformMatrix4fv(u_TranslateMatrix, false, g_transforms[i][0]);
+      gl.uniformMatrix4fv(u_ScaleMatrix, false, g_transforms[i][1]);
+
+      gl.uniformMatrix4fv(u_RotateAux, false, g_transforms[i][2]);
+      gl.uniformMatrix4fv(u_RotateXMatrix, false, g_transforms[i][3]);
+      gl.uniformMatrix4fv(u_RotateYMatrix, false, g_transforms[i][4]);
+      gl.uniformMatrix4fv(u_RotateZMatrix, false, g_transforms[i][5]);
+      gl.uniformMatrix4fv(u_RotateAux2, false, g_transforms[i][6]);
+
+      var vertices = new Float32Array(g_points[i]);
+      var vertexBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.DYNAMIC_DRAW);
+
+      var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
+
+      gl.vertexAttribPointer(a_Position, 3, gl.FLOAT, false, 0, 0);
+      gl.enableVertexAttribArray(a_Position);
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+      var colors = new Float32Array(g_colors[i]);
+      var colorBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, colors, gl.DYNAMIC_DRAW);
+
+      var a_Color = gl.getAttribLocation(gl.program, 'a_Color');
+
+      gl.vertexAttribPointer(a_Color, 3, gl.FLOAT, false, 0, 0);
+      gl.enableVertexAttribArray(a_Color);
+
+      var n = g_points[i].length/3;
+
+      gl.drawArrays(gl.POINTS, 0, n);
+      gl.drawArrays(gl.TRIANGLE_FAN, 0, n);
+    }
+}
+
+function click(ev, gl, canvas) {
+  var x = ev.clientX;
+  var y = ev.clientY;
+  console.log(zPos);
+  var z = parseFloat(zPos);
+  var rect = ev.target.getBoundingClientRect() ;
+
+  x = ((x - rect.left) - canvas.width/2)/(canvas.width/2);
+  y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
+
+  g_points[currObject].push(x);
+  g_points[currObject].push(y);
+  g_points[currObject].push(z);
+
+  g_colors[currObject].push(Math.random());
+  g_colors[currObject].push(Math.random());
+  g_colors[currObject].push(Math.random());
+
+  paint();
+}

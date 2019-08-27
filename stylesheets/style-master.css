@@ -1,0 +1,112 @@
+#top-bar{
+  background-color: rgb(204, 204, 204);
+  padding-bottom: 5px;
+  width: 100%;
+}
+
+body{
+  font-family: Trebuchet MS;
+	font-weight: 900;
+	font-size: 20px;
+}
+
+.common-button{
+  margin:5px;
+  height: 40px;
+}
+
+.object-button{
+  height: 40px;
+  width: 100%;
+}
+.object-button:focus{
+  color: #0096a3;
+}
+.right-object-button{
+  background-color: rgb(204, 204, 204);
+  border: 2px solid #f1f1f1;
+  height: 40px;
+  width: 100%;
+}
+
+.main-canvas{
+  width:100%;
+  height:75%;
+}
+
+div.column{
+	flex: 50%;
+	display: inline-block; /*permite darle ancho y alto*/
+	vertical-align: middle;
+	flex-wrap: nowrap;
+}
+
+.sidebar {
+  margin: 0;
+  padding: 5px;
+  width: 200px;
+  background-color: #f1f1f1;
+  position: fixed;
+  height: 800px;
+}
+.right-sidebar{
+  float: right;
+  padding: 5px;
+	width: 200px;
+  background-color: #f1f1f1;
+  height: 800px;
+
+}
+.right-sidebar a {
+  display: block;
+  color: black;
+  padding: 16px;
+  text-decoration: none;
+}
+
+/* Active/current link */
+.right-sidebar a.active {
+  background-color: #0096a3;
+  color: white;
+}
+.sidebar a {
+  display: block;
+  color: black;
+  padding: 16px;
+  text-decoration: none;
+}
+
+/* Active/current link */
+.sidebar a.active {
+  background-color: #0096a3;
+  color: white;
+}
+/* Page content. The value of the margin-left property should match the value of the sidebar's width property */
+div.content {
+  margin-left: 200px;
+
+  width: 100%;
+  height: 1000px;
+  display: inline;
+}
+
+.slidecontainer {
+  padding: 5px;
+  width: 30%;
+  display:inline-table;
+  background-color: #a1a1a1;
+}
+
+.control-slidecontainer {
+  width: 100%;
+}
+.app-icon{
+	width:30px;
+	height:30px;
+}
+.column-image-div{
+  float: left;
+	display: inline-block; /*permite darle ancho y alto*/
+	vertical-align: middle;
+	flex-wrap: nowrap;
+}

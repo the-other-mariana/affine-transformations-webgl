@@ -1,0 +1,310 @@
+var VSHADER_SOURCE =
+  'attribute vec4 a_Position;\n' +
+  'uniform mat4 u_TranslateMatrix;\n' +
+  'uniform mat4 u_ScaleMatrix;\n' +
+
+  'uniform mat4 u_RotateAux;\n' +
+  'uniform mat4 u_RotateMatrix;\n' +
+  'uniform mat4 u_RotateAux2;\n' +
+
+  'attribute vec4 a_Color;\n' +
+  'varying vec4 v_FragColor;\n' +
+  'void main() {\n' +
+  //' u_TransformMatrix = u_TranslateMatrix * u_ScaleMatrix;\n' +
+  //' gl_Position =  u_RotateMatrix * u_ScaleMatrix * u_TranslateMatrix * a_Position;\n'+
+  ' gl_Position =  u_RotateAux * u_RotateMatrix * u_RotateAux2 * a_Position;\n'+
+  ' v_FragColor = a_Color;\n'+
+  ' gl_PointSize = 10.0;\n'+
+  '}\n';
+
+var FSHADER_SOURCE =
+  'precision mediump float;\n' +
+  'varying vec4 v_FragColor;\n' +
+  'void main(){\n'+
+  //' gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n'+
+  ' gl_FragColor = v_FragColor;\n'+
+  '}\n';
+
+  var canvas = document.getElementById('webgl');
+  var gl = getWebGLContext(canvas);
+
+function main(){
+  if(!gl){
+    console.log('Failed to get the WebGL context');
+    return;
+  }
+
+  if(!initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE)){
+    console.log('Failed to initialize shaders');
+    return;
+  }
+  initTransforms();
+  canvas.onclick = function(ev){ click(ev, gl, canvas); };
+  //canvas.oncontextmenu  = function(ev){ rightClick(ev, gl, canvas);  return false;};
+  gl.clearColor(0.0, 0.0, 0.0, 1.0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  gl.enable(gl.DEPTH_TEST);
+}
+
+var g_points = [[]];
+var g_colors = [[]];
+var clicks = {Value: 0};
+var index = 0;
+var currObject = 0;
+var zPos = 0.0;
+
+var angleY = 0.0;
+
+function selectObject(event){
+  console.log(parseInt(event.target.value));
+  currObject = parseInt(event.target.value);
+  $("#current-object-field").text("Current object: Object " + (currObject + 1));
+  $("#object-title").text("Object " + (currObject + 1));
+
+  $("#x-translate").val(g_transforms[currObject][0][12]);
+  $("#y-translate").val(g_transforms[currObject][0][13]);
+  $("#z-translate").val(g_transforms[currObject][0][14]);
+
+  // 0 5 10
+  $("#x-scale").val(g_transforms[currObject][1][0]);
+  $("#y-scale").val(g_transforms[currObject][1][5]);
+  $("#z-scale").val(g_transforms[currObject][1][10]);
+
+  // 0 1 4 5
+  $("#y-rotate").val(angleY);
+}
+
+var tx = 0.0;
+var ty = 0.0;
+var tz = 0.0;
+
+var g_transforms = [[]]
+
+function getNewTransformMatrix(){
+  var transformMatrix = new Float32Array([
+    1.0, 0.0, 0.0, 0.0,
+    0.0, 1.0, 0.0, 0.0,
+    0.0, 0.0, 1.0, 0.0,
+    0.0, 0.0, 0.0, 1.0
+  ]);
+  return transformMatrix;
+}
+
+
+function newObject(event){
+  index += 1;
+  g_points.push([]);
+  g_colors.push([]);
+
+  g_transforms.push([])
+  g_transforms[index].push(getNewTransformMatrix());
+  g_transforms[index].push(getNewTransformMatrix());
+
+  g_transforms[index].push(getNewTransformMatrix());
+  g_transforms[index].push(getNewTransformMatrix());
+  g_transforms[index].push(getNewTransformMatrix());
+
+  currObject = index;
+  $("#current-object-field").text("Current object: Object " + (currObject + 1));
+  $("#object-title").text("Object " + (currObject + 1));
+  $("#sidebar").append('<button class = "object-button" onclick = "selectObject(event);" value = ' + (index) + '>Object ' + (index + 1) + '</button>');
+
+  //range bars in zero here
+  console.log("objects: " + g_colors.length);
+}
+
+function updateTextInput(val) {
+  zPos = parseFloat(val);
+  document.getElementById('textInput').value = val;
+}
+
+function centroidX(obj){
+  var sum = 0.0;
+  for(var i = 0; i < g_points[obj].length; i += 3){
+    sum += g_points[obj][i];
+  }
+  sum = sum / g_points[obj].length;
+  return sum;
+}
+
+function centroidY(obj){
+  var sum = 0.0;
+  for(var i = 0; i < g_points[obj].length; i += 3){
+    sum += g_points[obj][i + 1];
+  }
+  sum = sum / g_points[obj].length;
+  return sum;
+}
+
+function centroidZ(obj){
+  var sum = 0.0;
+  for(var i = 0; i < g_points[obj].length; i += 3){
+    sum += g_points[obj][i + 2];
+  }
+  sum = sum / g_points[obj].length;
+  return sum;
+}
+
+function initTransforms(){
+  g_transforms.push([])
+  // translate matrix
+  g_transforms[0].push(getNewTransformMatrix());
+  // scale matrix
+  g_transforms[0].push(getNewTransformMatrix());
+
+  // rotation y matrix
+  g_transforms[0].push(getNewTransformMatrix());
+  g_transforms[0].push(getNewTransformMatrix());
+  g_transforms[0].push(getNewTransformMatrix());
+}
+function updateTranslate(value, id){
+  if(id == "x-translate"){
+    g_transforms[currObject][0][12] = value;
+  }
+  if(id == "y-translate"){
+    g_transforms[currObject][0][13] = value;
+  }
+  if(id == "z-translate"){
+    g_transforms[currObject][0][14] = value;
+  }
+
+  paint();
+}
+
+function updateScale(value, id){
+  if(id == "x-scale"){
+    g_transforms[currObject][1][0] = value;
+  }
+  if(id == "y-scale"){
+    g_transforms[currObject][1][5] = value;
+  }
+  if(id == "z-scale"){
+    g_transforms[currObject][1][10] = value;
+  }
+
+  paint();
+}
+function updateRotate(value, id){
+  var cosB = Math.cos(value*(3.1416 / 180.0));
+  var sinB = Math.sin(value*(3.1416 / 180.0));
+
+  if(id == "y-rotate"){
+    // translate by -centre
+    g_transforms[currObject][2][12] = -1*centroidX(currObject);
+    g_transforms[currObject][2][13] = -1*centroidY(currObject);
+    g_transforms[currObject][2][14] = -1*centroidZ(currObject);
+
+    //rotate
+    g_transforms[currObject][3][2] = -1*sinB;
+    g_transforms[currObject][3][8] = sinB;
+    g_transforms[currObject][3][0] = cosB;
+    g_transforms[currObject][3][10] = cosB;
+
+    g_transforms[currObject][4][12] = centroidX(currObject);
+    g_transforms[currObject][4][13] = centroidY(currObject);
+    g_transforms[currObject][4][14] = centroidZ(currObject);
+  }
+
+  paint();
+}
+// 0: translate matrix
+
+function paint(){
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  //gl.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    for(var i = 0; i < g_points.length; i++){
+
+      var u_TranslateMatrix = gl.getUniformLocation(gl.program, 'u_TranslateMatrix');
+      var u_ScaleMatrix = gl.getUniformLocation(gl.program, 'u_ScaleMatrix');
+      var u_RotateMatrix = gl.getUniformLocation(gl.program, 'u_RotateMatrix');
+      gl.uniformMatrix4fv(u_TranslateMatrix, false, g_transforms[i][0]);
+      gl.uniformMatrix4fv(u_ScaleMatrix, false, g_transforms[i][1]);
+
+      gl.uniformMatrix4fv(u_RotateMatrix, false, g_transforms[i][3]);
+
+      var vertices = new Float32Array(g_points[i]);
+      var vertexBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.DYNAMIC_DRAW);
+
+      var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
+
+      gl.vertexAttribPointer(a_Position, 3, gl.FLOAT, false, 0, 0);
+      gl.enableVertexAttribArray(a_Position);
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+      var colors = new Float32Array(g_colors[i]);
+      var colorBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, colors, gl.DYNAMIC_DRAW);
+
+      var a_Color = gl.getAttribLocation(gl.program, 'a_Color');
+
+      gl.vertexAttribPointer(a_Color, 3, gl.FLOAT, false, 0, 0);
+      gl.enableVertexAttribArray(a_Color);
+
+      var n = g_points[i].length/3;
+
+      gl.drawArrays(gl.POINTS, 0, n);
+      gl.drawArrays(gl.TRIANGLE_FAN, 0, n);
+    }
+}
+
+function click(ev, gl, canvas) {
+  var x = ev.clientX;
+  var y = ev.clientY;
+  console.log(zPos);
+  var z = parseFloat(zPos);
+  var rect = ev.target.getBoundingClientRect() ;
+
+  x = ((x - rect.left) - canvas.width/2)/(canvas.width/2);
+  y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
+
+  g_points[currObject].push(x);
+  g_points[currObject].push(y);
+  g_points[currObject].push(z);
+
+  g_colors[currObject].push(Math.random());
+  g_colors[currObject].push(Math.random());
+  g_colors[currObject].push(Math.random());
+
+  paint();
+  //paint();
+/*
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  //gl.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    for(var i = 0; i < g_points.length; i++){
+
+      var vertices = new Float32Array(g_points[i]);
+      var vertexBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.DYNAMIC_DRAW);
+
+      var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
+
+      gl.vertexAttribPointer(a_Position, 3, gl.FLOAT, false, 0, 0);
+      gl.enableVertexAttribArray(a_Position);
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+      var colors = new Float32Array(g_colors[i]);
+      var colorBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, colors, gl.DYNAMIC_DRAW);
+
+      var a_Color = gl.getAttribLocation(gl.program, 'a_Color');
+
+      gl.vertexAttribPointer(a_Color, 3, gl.FLOAT, false, 0, 0);
+      gl.enableVertexAttribArray(a_Color);
+
+      var n = g_points[i].length/3;
+
+      gl.drawArrays(gl.POINTS, 0, n);
+      gl.drawArrays(gl.TRIANGLE_FAN, 0, n);
+    }
+*/
+}
