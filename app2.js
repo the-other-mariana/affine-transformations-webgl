@@ -53,26 +53,37 @@ var angleY = 0.0;
 var angleZ = 0.0;
 var mode = "normal";
 
+const map = {
+  TRANSLATE: 0,
+  SCALE: 1,
+  CENTER: 2,
+  ROTATEX: 3,
+  ROTATEY: 4,
+  ROTATEZ: 5,
+  DECENTER: 6,
+  ANGLES: 7,
+  STATE: 8,
+  MODE: 9
+}
+
 function selectObject(event){
-  //mode = "modify";
-  //mode = "normal";
   console.log(parseInt(event.target.value));
   currObject = parseInt(event.target.value);
   $("#current-object-field").text("Current object: Object " + (currObject + 1));
   $("#object-title").text("Object " + (currObject + 1));
 
   // inserting current object's last info
-  $("#x-translate").val(g_transforms[currObject][0][12]);
-  $("#y-translate").val(g_transforms[currObject][0][13]);
-  $("#z-translate").val(g_transforms[currObject][0][14]);
+  $("#x-translate").val(g_transforms[currObject][map.TRANSLATE][12]);
+  $("#y-translate").val(g_transforms[currObject][map.TRANSLATE][13]);
+  $("#z-translate").val(g_transforms[currObject][map.TRANSLATE][14]);
 
-  $("#x-scale").val(g_transforms[currObject][1][0]);
-  $("#y-scale").val(g_transforms[currObject][1][5]);
-  $("#z-scale").val(g_transforms[currObject][1][10]);
+  $("#x-scale").val(g_transforms[currObject][map.SCALE][0]);
+  $("#y-scale").val(g_transforms[currObject][map.SCALE][5]);
+  $("#z-scale").val(g_transforms[currObject][map.SCALE][10]);
 
-  $("#x-rotate").val(g_transforms[currObject][7][0]);
-  $("#y-rotate").val(g_transforms[currObject][7][1]);
-  $("#z-rotate").val(g_transforms[currObject][7][2]);
+  $("#x-rotate").val(g_transforms[currObject][map.ANGLES][0]);
+  $("#y-rotate").val(g_transforms[currObject][map.ANGLES][1]);
+  $("#z-rotate").val(g_transforms[currObject][map.ANGLES][2]);
 }
 
 var g_transforms = [[]]
@@ -89,7 +100,6 @@ function getNewTransformMatrix(){
 }
 
 function newObject(event){
-  ///mode = "normal";
   index += 1;
   g_points.push([]);
   g_colors.push([]);
@@ -119,7 +129,6 @@ function newObject(event){
   $("#y-rotate").val(0.0);
   $("#z-rotate").val(0.0);
   console.log(mode);
-  //console.log("objects: " + g_colors.length);
 }
 
 function updateTextInput(val) {
@@ -153,52 +162,46 @@ function initTransforms(){
 function updateTranslate(value, id){
   //mode = "modify";
   if(id == "x-translate"){
-    g_transforms[currObject][0][12] = value;
+    g_transforms[currObject][map.TRANSLATE][12] = value;
   }
   if(id == "y-translate"){
-    g_transforms[currObject][0][13] = value;
+    g_transforms[currObject][map.TRANSLATE][13] = value;
   }
   if(id == "z-translate"){
-    g_transforms[currObject][0][14] = value;
+    g_transforms[currObject][map.TRANSLATE][14] = value;
   }
-  ///mode = "modify";
-  g_transforms[currObject][9][0] = "modify";
-  $("#mode").text(g_transforms[currObject][9][0]);
+  g_transforms[currObject][map.MODE][0] = "modify";
+  $("#mode").text(g_transforms[currObject][map.MODE][0]);
   paint();
-  //mode = "modify";
 }
 
 function initCentroid(){
-  g_transforms[currObject][2][12] = -1*centroid(currObject).x;
-  g_transforms[currObject][2][13] = -1*centroid(currObject).y;
-  g_transforms[currObject][2][14] = -1*centroid(currObject).z;
+  g_transforms[currObject][map.CENTER][12] = -1*centroid(currObject).x;
+  g_transforms[currObject][map.CENTER][13] = -1*centroid(currObject).y;
+  g_transforms[currObject][map.CENTER][14] = -1*centroid(currObject).z;
 
-  g_transforms[currObject][6][12] = centroid(currObject).x;
-  g_transforms[currObject][6][13] = centroid(currObject).y;
-  g_transforms[currObject][6][14] = centroid(currObject).z;
+  g_transforms[currObject][map.DECENTER][12] = centroid(currObject).x;
+  g_transforms[currObject][map.DECENTER][13] = centroid(currObject).y;
+  g_transforms[currObject][map.DECENTER][14] = centroid(currObject).z;
 }
 
 function updateScale(value, id){
-  //mode = "modify";
   initCentroid();
 
   if(id == "x-scale"){
-    g_transforms[currObject][1][0] = value;
+    g_transforms[currObject][map.SCALE][0] = value;
   }
   if(id == "y-scale"){
-    g_transforms[currObject][1][5] = value;
+    g_transforms[currObject][map.SCALE][5] = value;
   }
   if(id == "z-scale"){
-    g_transforms[currObject][1][10] = value;
+    g_transforms[currObject][map.SCALE][10] = value;
   }
-  ///mode = "modify";
-  g_transforms[currObject][9][0] = "modify";
-  $("#mode").text(g_transforms[currObject][9][0]);
+  g_transforms[currObject][map.MODE][0] = "modify";
+  $("#mode").text(g_transforms[currObject][map.MODE][0]);
   paint();
-  //mode = "modify";
 }
 function updateRotate(value, id){
-  //mode = "modify";
   var cosB = Math.cos(value*(3.1416 / 180.0));
   var sinB = Math.sin(value*(3.1416 / 180.0));
 
@@ -206,56 +209,64 @@ function updateRotate(value, id){
 
   if(id == "x-rotate"){
     angleX = value;
-    g_transforms[currObject][7][0] = value;
+    g_transforms[currObject][map.ANGLES][0] = value;
 
-    g_transforms[currObject][3][5] = cosB;
-    g_transforms[currObject][3][6] = sinB;
-    g_transforms[currObject][3][9] = -1*sinB;
-    g_transforms[currObject][3][10] = cosB;
+    g_transforms[currObject][map.ROTATEX][5] = cosB;
+    g_transforms[currObject][map.ROTATEX][6] = sinB;
+    g_transforms[currObject][map.ROTATEX][9] = -1*sinB;
+    g_transforms[currObject][map.ROTATEX][10] = cosB;
   }
   if(id == "y-rotate"){
     angleY = value;
-    g_transforms[currObject][7][1] = value;
+    g_transforms[currObject][map.ANGLES][1] = value;
 
-    g_transforms[currObject][4][2] = -1*sinB;
-    g_transforms[currObject][4][8] = sinB;
-    g_transforms[currObject][4][0] = cosB;
-    g_transforms[currObject][4][10] = cosB;
+    g_transforms[currObject][map.ROTATEY][2] = -1*sinB;
+    g_transforms[currObject][map.ROTATEY][8] = sinB;
+    g_transforms[currObject][map.ROTATEY][0] = cosB;
+    g_transforms[currObject][map.ROTATEY][10] = cosB;
   }
   if(id == "z-rotate"){
     angleZ = value;
-    g_transforms[currObject][7][2] = value;
+    g_transforms[currObject][map.ANGLES][2] = value;
 
-    g_transforms[currObject][5][0] = cosB;
-    g_transforms[currObject][5][1] = sinB;
-    g_transforms[currObject][5][4] = -1*sinB;
-    g_transforms[currObject][5][5] = cosB;
+    g_transforms[currObject][map.ROTATEZ][0] = cosB;
+    g_transforms[currObject][map.ROTATEZ][1] = sinB;
+    g_transforms[currObject][map.ROTATEZ][4] = -1*sinB;
+    g_transforms[currObject][map.ROTATEZ][5] = cosB;
   }
-  ///mode = "modify";
-  g_transforms[currObject][9][0] = "modify";
-  $("#mode").text(g_transforms[currObject][9][0]);
+  g_transforms[currObject][map.MODE][0] = "modify";
+  $("#mode").text(g_transforms[currObject][map.MODE][0]);
   paint();
-  //mode = "modify";
 }
 function eraseObject(){
-  g_transforms[currObject][8][0] = "inactive";
+  g_transforms[currObject][map.STATE][0] = "inactive";
   $("#" + currObject).remove();
   $("#current-object-field").text("Current object: No Object");
   $("#object-title").text("No Object");
   paint();
 }
 
+function scalarMultip(k, array){
+  var res = new Float32Array(array);
+  for(var i = 0; i < array.length; i++){
+    res[i] = k * array[i];
+  }
+
+  return res;
+}
+
 function getTotalModelMatrix(index){
   var modelMatrix = new Matrix4();
-  var centerMtx = new Matrix4(); centerMtx.elements = g_transforms[index][2];
-  var rotXMtx = new Matrix4(); rotXMtx.elements = g_transforms[index][3];
-  var rotYMtx = new Matrix4(); rotYMtx.elements = g_transforms[index][4];
-  var rotZMtx = new Matrix4(); rotZMtx.elements = g_transforms[index][5];
-  var scaleMtx = new Matrix4(); scaleMtx.elements = g_transforms[index][1];
-  var decenterMtx = new Matrix4(); decenterMtx.elements = g_transforms[index][6];
-  var transMtx = new Matrix4(); transMtx.elements = g_transforms[index][0];
+  var centerMtx = new Matrix4(); centerMtx.elements = g_transforms[index][map.CENTER];
+  var rotXMtx = new Matrix4(); rotXMtx.elements = g_transforms[index][map.ROTATEX];
+  var rotYMtx = new Matrix4(); rotYMtx.elements = g_transforms[index][map.ROTATEY];
+  var rotZMtx = new Matrix4(); rotZMtx.elements = g_transforms[index][map.ROTATEZ];
+  var scaleMtx = new Matrix4(); scaleMtx.elements = g_transforms[index][map.SCALE];
+  var decenterMtx = new Matrix4(); decenterMtx.elements = g_transforms[index][map.DECENTER];
+  var transMtx = new Matrix4(); transMtx.elements = g_transforms[index][map.TRANSLATE];
 
   modelMatrix = ((((((modelMatrix.multiply(transMtx)).multiply(decenterMtx)).multiply(scaleMtx)).multiply(rotZMtx)).multiply(rotYMtx)).multiply(rotXMtx)).multiply(centerMtx);
+
   return modelMatrix;
 }
 
@@ -323,36 +334,48 @@ function dotMatrix(A, B) {
   return result;
 }
 
+function undoTransforms(x, y, z){
+  //var nv = {x: x, y: y, z: z};
+  var nv = new Vector4();
+  nv.elements = [x, y, z, 1.0];
+  var test = new Matrix4();
+
+  test.elements = scalarMultip(-1, g_transforms[currObject][0]);
+  nv = test.multiplyVector4(nv);
+  console.log(nv);
+  return nv;
+}
+
 function configureModifyModeTransforms(x, y, z){
   var newVertex = {x: x, y: y, z: z};
 
-  newVertex.x = newVertex.x - g_transforms[currObject][0][12];
-  newVertex.y = newVertex.y - g_transforms[currObject][0][13];
-  newVertex.z = newVertex.z - g_transforms[currObject][0][14];
+  newVertex.x = newVertex.x - g_transforms[currObject][map.TRANSLATE][12];
+  newVertex.y = newVertex.y - g_transforms[currObject][map.TRANSLATE][13];
+  newVertex.z = newVertex.z - g_transforms[currObject][map.TRANSLATE][14];
 
-  newVertex.x = newVertex.x + g_transforms[currObject][2][12];
-  newVertex.y = newVertex.y + g_transforms[currObject][2][13];
-  newVertex.z = newVertex.z + g_transforms[currObject][2][14];
+  newVertex.x = newVertex.x + g_transforms[currObject][map.CENTER][12];
+  newVertex.y = newVertex.y + g_transforms[currObject][map.CENTER][13];
+  newVertex.z = newVertex.z + g_transforms[currObject][map.CENTER][14];
 
-  newVertex.x = newVertex.x * 1.0/g_transforms[currObject][1][0];
-  newVertex.y = newVertex.y * 1.0/g_transforms[currObject][1][5];
-  newVertex.z = newVertex.z * 1.0/g_transforms[currObject][1][10];
+  newVertex.x = newVertex.x * 1.0/g_transforms[currObject][map.SCALE][0];
+  newVertex.y = newVertex.y * 1.0/g_transforms[currObject][map.SCALE][5];
+  newVertex.z = newVertex.z * 1.0/g_transforms[currObject][map.SCALE][10];
 
   var xProv = newVertex.x; var yProv = newVertex.y; var zProv = newVertex.z;
-  newVertex.x = xProv*Math.cos(-1*g_transforms[currObject][7][2]*(3.1416/180.0)) - yProv*Math.sin(-1*g_transforms[currObject][7][2]*(3.1416/180.0));
-  newVertex.y = xProv*Math.sin(-1*g_transforms[currObject][7][2]*(3.1416/180.0)) + yProv*Math.cos(-1*g_transforms[currObject][7][2]*(3.1416/180.0));
+  newVertex.x = xProv*Math.cos(-1*g_transforms[currObject][map.ANGLES][2]*(3.1416/180.0)) - yProv*Math.sin(-1*g_transforms[currObject][map.ANGLES][2]*(3.1416/180.0));
+  newVertex.y = xProv*Math.sin(-1*g_transforms[currObject][map.ANGLES][2]*(3.1416/180.0)) + yProv*Math.cos(-1*g_transforms[currObject][map.ANGLES][2]*(3.1416/180.0));
 
   xProv = newVertex.x; zProv = newVertex.z; yProv = newVertex.y;
-  newVertex.x = xProv*Math.cos(-1*g_transforms[currObject][7][1]*(3.1416/180.0)) + zProv*Math.sin(-1*g_transforms[currObject][7][1]*(3.1416/180.0));
-  newVertex.z = -xProv*Math.sin(-1*g_transforms[currObject][7][1]*(3.1416/180.0)) + zProv*Math.cos(-1*g_transforms[currObject][7][1]*(3.1416/180.0));
+  newVertex.x = xProv*Math.cos(-1*g_transforms[currObject][map.ANGLES][1]*(3.1416/180.0)) + zProv*Math.sin(-1*g_transforms[currObject][map.ANGLES][1]*(3.1416/180.0));
+  newVertex.z = -xProv*Math.sin(-1*g_transforms[currObject][map.ANGLES][1]*(3.1416/180.0)) + zProv*Math.cos(-1*g_transforms[currObject][map.ANGLES][1]*(3.1416/180.0));
 
   xProv = newVertex.x; zProv = newVertex.z; yProv = newVertex.y;
-  newVertex.y = yProv*Math.cos(-1*g_transforms[currObject][7][0]*(3.1416/180.0)) - zProv*Math.sin(-1*g_transforms[currObject][7][0]*(3.1416/180.0));
-  newVertex.z = yProv*Math.sin(-1*g_transforms[currObject][7][0]*(3.1416/180.0)) + zProv*Math.cos(-1*g_transforms[currObject][7][0]*(3.1416/180.0));
+  newVertex.y = yProv*Math.cos(-1*g_transforms[currObject][map.ANGLES][0]*(3.1416/180.0)) - zProv*Math.sin(-1*g_transforms[currObject][map.ANGLES][0]*(3.1416/180.0));
+  newVertex.z = yProv*Math.sin(-1*g_transforms[currObject][map.ANGLES][0]*(3.1416/180.0)) + zProv*Math.cos(-1*g_transforms[currObject][map.ANGLES][0]*(3.1416/180.0));
 
-  newVertex.x = newVertex.x + g_transforms[currObject][6][12];
-  newVertex.y = newVertex.y + g_transforms[currObject][6][13];
-  newVertex.z = newVertex.z + g_transforms[currObject][6][14];
+  newVertex.x = newVertex.x + g_transforms[currObject][map.DECENTER][12];
+  newVertex.y = newVertex.y + g_transforms[currObject][map.DECENTER][13];
+  newVertex.z = newVertex.z + g_transforms[currObject][map.DECENTER][14];
   return newVertex;
 
 }
@@ -368,7 +391,7 @@ function click(ev, gl, canvas) {
   y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
 
 
-  if(g_transforms[currObject][9][0] == "modify"){
+  if(g_transforms[currObject][map.MODE][0] == "modify"){
     var modVertex = configureModifyModeTransforms(x, y, z);
     x = modVertex.x;
     y = modVertex.y;
