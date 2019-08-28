@@ -143,7 +143,7 @@ function initTransforms(){
   g_transforms[0].push(["active"]);
 }
 function updateTranslate(value, id){
-  mode = "modify";
+  //mode = "modify";
   if(id == "x-translate"){
     g_transforms[currObject][0][12] = value;
   }
@@ -153,7 +153,7 @@ function updateTranslate(value, id){
   if(id == "z-translate"){
     g_transforms[currObject][0][14] = value;
   }
-
+  mode = "modify";
   paint();
 }
 
@@ -168,7 +168,7 @@ function initCentroid(){
 }
 
 function updateScale(value, id){
-  mode = "modify";
+  //mode = "modify";
   initCentroid();
 
   if(id == "x-scale"){
@@ -180,11 +180,11 @@ function updateScale(value, id){
   if(id == "z-scale"){
     g_transforms[currObject][1][10] = value;
   }
-
+  mode = "modify";
   paint();
 }
 function updateRotate(value, id){
-  mode = "modify";
+  //mode = "modify";
   var cosB = Math.cos(value*(3.1416 / 180.0));
   var sinB = Math.sin(value*(3.1416 / 180.0));
 
@@ -217,6 +217,7 @@ function updateRotate(value, id){
     g_transforms[currObject][5][4] = -1*sinB;
     g_transforms[currObject][5][5] = cosB;
   }
+  mode = "modify";
   paint();
 }
 function eraseObject(){
