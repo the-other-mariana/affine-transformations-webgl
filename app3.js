@@ -90,7 +90,7 @@ function newObject(event){
   g_points.push([]);
   g_colors.push([]);
 
-  g_transforms.push([])
+  g_transforms.push([]);
   for(var i = 0; i < 7; i++){
     g_transforms[index].push([0.0, 0.0, 0.0]);
   }
@@ -149,7 +149,6 @@ function initTransforms(){
   g_transforms[0][map.SCALE] = [1.0, 1.0, 1.0];
 }
 function updateTranslate(value, id){
-  //mode = "modify";
   if(id == "x-translate"){
     g_transforms[currObject][map.TRANSLATE][0] = value;
   }
@@ -191,9 +190,6 @@ function updateScale(value, id){
   paint();
 }
 function updateRotate(value, id){
-  var cosB = Math.cos(value*(3.1416 / 180.0));
-  var sinB = Math.sin(value*(3.1416 / 180.0));
-
   initCentroid();
 
   if(id == "x-rotate"){
@@ -213,6 +209,7 @@ function updateRotate(value, id){
   $("#mode").text(g_transforms[currObject][map.MODE][0]);
   paint();
 }
+
 function eraseObject(){
   g_transforms[currObject][map.STATE][0] = "inactive";
   $("#" + currObject).remove();
@@ -354,7 +351,6 @@ function click(ev, gl, canvas) {
 
 
   if(g_transforms[currObject][map.MODE][0] == "modify"){
-
     var modVertex = configureModifyModeTransforms(x, y, z);
     x = modVertex.x;
     y = modVertex.y;
