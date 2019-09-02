@@ -120,6 +120,8 @@ function updateTextInput(val) {
   document.getElementById('textInput').value = val;
 }
 
+
+
 function centroid(obj){
   var sum = {x: 0.0, y: 0.0, z: 0.0};
 

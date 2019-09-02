@@ -265,7 +265,7 @@ function getTotalModelMatrix(index){
   var decenterMtx = new Matrix4(); decenterMtx.elements = g_transforms[index][map.DECENTER];
   var transMtx = new Matrix4(); transMtx.elements = g_transforms[index][map.TRANSLATE];
 
-  modelMatrix = modelMatrix.multiply(transMtx).multiply(decenterMtx).multiply(scaleMtx).multiply(rotZMtx).multiply(rotYMtx).multiply(rotXMtx).multiply(centerMtx);
+  modelMatrix = ((((((modelMatrix.multiply(transMtx)).multiply(decenterMtx)).multiply(scaleMtx)).multiply(rotZMtx)).multiply(rotYMtx)).multiply(rotXMtx)).multiply(centerMtx);
 
   return modelMatrix;
 }
@@ -393,7 +393,7 @@ function click(ev, gl, canvas) {
 
 
   if(g_transforms[currObject][map.MODE][0] == "modify"){
-
+    
     var modVertex = configureModifyModeTransforms(x, y, z);
     x = modVertex.x;
     y = modVertex.y;

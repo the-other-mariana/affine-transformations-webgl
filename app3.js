@@ -60,7 +60,8 @@ const map = {
   DECENTER: 3,
   ANGLES: 4,
   STATE: 5,
-  MODE: 6
+  MODE: 6,
+  MODELING_MODE: 7
 }
 
 function selectObject(event){
@@ -91,13 +92,14 @@ function newObject(event){
   g_colors.push([]);
 
   g_transforms.push([]);
-  for(var i = 0; i < 7; i++){
+  for(var i = 0; i < 5; i++){
     g_transforms[index].push([0.0, 0.0, 0.0]);
   }
 
-  g_transforms[index].push([0, 0, 0]);
   g_transforms[index].push(["active"]);
   g_transforms[index].push(["normal"]);
+  g_transforms[index].push(["FAN"]);
+
   g_transforms[index][map.SCALE] = [1.0, 1.0, 1.0];
   currObject = index;
   $("#current-object-field").text("Current object: Object " + (currObject + 1));
@@ -140,12 +142,12 @@ function centroid(obj){
 
 function initTransforms(){
   g_transforms.push([]);
-  for(var i = 0; i < 7; i++){
+  for(var i = 0; i < 5; i++){
     g_transforms[0].push([0.0, 0.0, 0.0]);
   }
-  g_transforms[0].push([0, 0, 0]);
   g_transforms[0].push(["active"]);
   g_transforms[0].push(["normal"]);
+  g_transforms[0].push(["FAN"]);
   g_transforms[0][map.SCALE] = [1.0, 1.0, 1.0];
 }
 function updateTranslate(value, id){
@@ -278,8 +280,14 @@ function paint(){
       var n = g_points[i].length/3;
 
       gl.drawArrays(gl.POINTS, 0, n);
-      gl.drawArrays(gl.TRIANGLE_FAN, 0, n);
+
+      if(g_transforms[i][map.MODELING_MODE][0] == "FAN") gl.drawArrays(gl.TRIANGLE_FAN, 0, n);
+      else gl.drawArrays(gl.TRIANGLE_STRIP, 0, n);
     }
+}
+
+function updateModelingMode(value){
+  g_transforms[currObject][map.MODELING_MODE][0] = value;
 }
 
 function updateObjColor(value){

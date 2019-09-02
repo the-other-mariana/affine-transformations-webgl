@@ -23,6 +23,12 @@
         <input type="range" min="0" max="1" step="0.1" value="0.0" width = "width: 100px !important;" onchange = "updateTextInput(this.value);" style="margin-top: 5px; display: inline;">
       </div>
 
+      <p style = "display: inline;">Modeling Mode:</p>
+      <select id = "modeling-mode" onchange="updateModelingMode(this.value);">
+        <option value="FAN"> TRIANGLE FAN </option>
+        <option value="STRIP"> TRIANGLE STRIP </option>
+      </select>
+
     </div>
     <div class="sidebar" id = "sidebar">
       <a class="active" href="#home">Objects</a>
