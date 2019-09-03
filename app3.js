@@ -14,7 +14,6 @@ var FSHADER_SOURCE =
   'precision mediump float;\n' +
   'varying vec4 v_FragColor;\n' +
   'void main(){\n'+
-  //' gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n'+
   ' gl_FragColor = v_FragColor;\n'+
   '}\n';
 
@@ -31,21 +30,25 @@ function main(){
     console.log('Failed to initialize shaders');
     return;
   }
+  // initializing transform map and onclick function
   initTransforms();
   canvas.onclick = function(ev){ click(ev, gl, canvas); };
-  //canvas.oncontextmenu  = function(ev){ rightClick(ev, gl, canvas);  return false;};
+
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
   gl.clear(gl.COLOR_BUFFER_BIT);
 
+  // gl enables depth coordinates (x, y, z) representation
   gl.enable(gl.DEPTH_TEST);
 }
 
+// maps for positions, colors and transformations data
 var g_points = [[]];
 var g_colors = [[]];
-var clicks = {Value: 0};
+var g_transforms = [[]]
+
+// global variables
 var index = 0;
 var currObject = 0;
-var currObjectColor = [0, 0, 0];
 var zPos = 0.0;
 
 var angleX = 0.0;
@@ -53,6 +56,7 @@ var angleY = 0.0;
 var angleZ = 0.0;
 var mode = "normal";
 
+// a json object that contains indices: which index stores which matrix data inside transforms array
 const map = {
   TRANSLATE: 0,
   SCALE: 1,
@@ -64,12 +68,13 @@ const map = {
   MODELING_MODE: 7
 }
 
+// function that selects an object and shows its information on the right sidebar
 function selectObject(event){
   currObject = parseInt(event.target.value);
   $("#current-object-field").text("Current object: Object " + (currObject + 1));
   $("#object-title").text("Object " + (currObject + 1));
 
-  // inserting current object's last info
+  // inserting current object's last info when it is selected
   $("#x-translate").val(g_transforms[currObject][map.TRANSLATE][0]);
   $("#y-translate").val(g_transforms[currObject][map.TRANSLATE][1]);
   $("#z-translate").val(g_transforms[currObject][map.TRANSLATE][2]);
@@ -83,29 +88,33 @@ function selectObject(event){
   $("#z-rotate").val(g_transforms[currObject][map.ANGLES][2]);
 }
 
-var g_transforms = [[]]
-
+// function that creates a new object ready: initializes its transforms and sets its info to default
 function newObject(event){
   index += 1;
   g_points.push([]);
   g_colors.push([]);
 
+  // pushing empty arrays that will store matrix data
   g_transforms.push([]);
   for(var i = 0; i < 5; i++){
     g_transforms[index].push([0.0, 0.0, 0.0]);
   }
 
+  // additional object info after its matrix data
   g_transforms[index].push(["active"]);
   g_transforms[index].push(["normal"]);
   g_transforms[index].push(["FAN"]);
 
+  // setting scale separately because must be 1 instead of usual 0
   g_transforms[index][map.SCALE] = [1.0, 1.0, 1.0];
   currObject = index;
+
+  // appends a button in sidebar so that object can be selected
   $("#current-object-field").text("Current object: Object " + (currObject + 1));
   $("#object-title").text("Object " + (currObject + 1));
   $("#sidebar").append('<button class = "object-button" onclick = "selectObject(event); " value = ' + (index) + ' id = "' + (index) +'">Object ' + (index + 1) + '</button>');
 
-  //range bars in zero here
+  // range bars in zero here because is a new object
   $("#x-translate").val(0.0);
   $("#y-translate").val(0.0);
   $("#z-translate").val(0.0);
@@ -120,11 +129,14 @@ function newObject(event){
 
 }
 
+// updates z depth input textfield
 function updateTextInput(val) {
   zPos = parseFloat(val);
   document.getElementById('textInput').value = val;
 }
 
+// calculates an object's centroid: an average of all its vertices positions
+// returns a json object
 function centroid(obj){
   var sum = {x: 0.0, y: 0.0, z: 0.0};
 
@@ -139,6 +151,7 @@ function centroid(obj){
   return sum;
 }
 
+// initializes matrix data and additional object info in the map
 function initTransforms(){
   g_transforms.push([]);
   for(var i = 0; i < 5; i++){
@@ -149,6 +162,8 @@ function initTransforms(){
   g_transforms[0].push(["FAN"]);
   g_transforms[0][map.SCALE] = [1.0, 1.0, 1.0];
 }
+
+// updates translate range bar and sends the value to the array
 function updateTranslate(value, id){
   if(id == "x-translate"){
     g_transforms[currObject][map.TRANSLATE][0] = value;
@@ -164,17 +179,22 @@ function updateTranslate(value, id){
   paint();
 }
 
+// uses centroid information to build x, y, z coords for centering the object
 function initCentroid(){
+  // data corresponding to center translation matrix
   g_transforms[currObject][map.CENTER][0] = -1*centroid(currObject).x;
   g_transforms[currObject][map.CENTER][1] = -1*centroid(currObject).y;
   g_transforms[currObject][map.CENTER][2] = -1*centroid(currObject).z;
 
+  // data corresponding to decenter translation matrix
   g_transforms[currObject][map.DECENTER][0] = centroid(currObject).x;
   g_transforms[currObject][map.DECENTER][1] = centroid(currObject).y;
   g_transforms[currObject][map.DECENTER][2] = centroid(currObject).z;
 }
 
+// updates scale range bar information
 function updateScale(value, id){
+  // before scaling, you need to center the object
   initCentroid();
 
   if(id == "x-scale"){
@@ -190,7 +210,10 @@ function updateScale(value, id){
   $("#mode").text(g_transforms[currObject][map.MODE][0]);
   paint();
 }
+
+// updates rotate range bar information
 function updateRotate(value, id){
+  // before rotating, you need to center the object
   initCentroid();
 
   if(id == "x-rotate"){
@@ -211,6 +234,7 @@ function updateRotate(value, id){
   paint();
 }
 
+// erases object: sets its state to inactive
 function eraseObject(){
   g_transforms[currObject][map.STATE][0] = "inactive";
   $("#" + currObject).remove();
@@ -219,6 +243,8 @@ function eraseObject(){
   paint();
 }
 
+// calculates the cross product of all the transformations in order
+// returns the final Matrix4
 function getTotalModelMatrix(index){
   var modelMatrix = new Matrix4();
 
@@ -233,9 +259,9 @@ function getTotalModelMatrix(index){
   return modelMatrix;
 }
 
+// renders all objects: sends the transformations and points to the vertex shader
 function paint(){
   gl.clear(gl.COLOR_BUFFER_BIT);
-  //gl.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     for(var i = 0; i < g_points.length; i++){
 
@@ -276,35 +302,33 @@ function paint(){
     }
 }
 
+// updates the modeling mode to FAN or STRIP triangles
 function updateModelingMode(value){
   g_transforms[currObject][map.MODELING_MODE][0] = value;
 }
 
-function updateObjColor(value){
-  console.log(value);
-  var baseNumber = parseInt(value, 16);
-  var r = (baseNumber >> 16) & 255;
-  var g = (baseNumber >> 8) & 255;
-  var b = baseNumber & 255;
-  currObjectColor = [r, g, b];
-  console.log(r + "," + g + "," + b);
-}
-
+// once you apply a transformation to an object, you need to neutralize previous transforms in order to keep modeling
+// returns a json object
 function reciprocalTransformsToAdd(x, y, z){
   var newVertex = {x: x, y: y, z: z};
 
+  // apply reciprocal transforms to previous data in reverse order
+  // translate
   newVertex.x -= g_transforms[currObject][map.TRANSLATE][0];
   newVertex.y -= g_transforms[currObject][map.TRANSLATE][1];
   newVertex.z -= g_transforms[currObject][map.TRANSLATE][2];
 
+  // center
   newVertex.x += g_transforms[currObject][map.CENTER][0];
   newVertex.y += g_transforms[currObject][map.CENTER][1];
   newVertex.z += g_transforms[currObject][map.CENTER][2];
 
+  // scale
   newVertex.x *= 1.0/g_transforms[currObject][map.SCALE][0];
   newVertex.y *= 1.0/g_transforms[currObject][map.SCALE][1];
   newVertex.z *= 1.0/g_transforms[currObject][map.SCALE][2];
 
+  // rotate
   var xProv = newVertex.x; var yProv = newVertex.y; var zProv = newVertex.z;
   newVertex.x = xProv*Math.cos(-1*g_transforms[currObject][map.ANGLES][2]*(3.1416/180.0)) - yProv*Math.sin(-1*g_transforms[currObject][map.ANGLES][2]*(3.1416/180.0));
   newVertex.y = xProv*Math.sin(-1*g_transforms[currObject][map.ANGLES][2]*(3.1416/180.0)) + yProv*Math.cos(-1*g_transforms[currObject][map.ANGLES][2]*(3.1416/180.0));
@@ -317,6 +341,7 @@ function reciprocalTransformsToAdd(x, y, z){
   newVertex.y = yProv*Math.cos(-1*g_transforms[currObject][map.ANGLES][0]*(3.1416/180.0)) - zProv*Math.sin(-1*g_transforms[currObject][map.ANGLES][0]*(3.1416/180.0));
   newVertex.z = yProv*Math.sin(-1*g_transforms[currObject][map.ANGLES][0]*(3.1416/180.0)) + zProv*Math.cos(-1*g_transforms[currObject][map.ANGLES][0]*(3.1416/180.0));
 
+  // decenter
   newVertex.x += g_transforms[currObject][map.DECENTER][0];
   newVertex.y += g_transforms[currObject][map.DECENTER][1];
   newVertex.z += g_transforms[currObject][map.DECENTER][2];
@@ -324,17 +349,18 @@ function reciprocalTransformsToAdd(x, y, z){
 
 }
 
+// handles click to store vertex position
 function click(ev, gl, canvas) {
   var x = ev.clientX;
   var y = ev.clientY;
-  
+
   var z = parseFloat(zPos);
   var rect = ev.target.getBoundingClientRect() ;
 
   x = ((x - rect.left) - canvas.width/2)/(canvas.width/2);
   y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
 
-
+  // if you transform and want to keep adding vertices, apply reverse transforms to new position
   if(g_transforms[currObject][map.MODE][0] == "modify"){
     var modVertex = reciprocalTransformsToAdd(x, y, z);
     x = modVertex.x;
@@ -346,6 +372,7 @@ function click(ev, gl, canvas) {
   g_points[currObject].push(y);
   g_points[currObject].push(z);
 
+  // push random rgb values for each vertex color
   g_colors[currObject].push(Math.random());
   g_colors[currObject].push(Math.random());
   g_colors[currObject].push(Math.random());
