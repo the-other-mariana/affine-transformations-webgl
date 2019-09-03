@@ -44,7 +44,7 @@ function main(){
 // maps for positions, colors and transformations data
 var g_points = [[]];
 var g_colors = [[]];
-var g_transforms = [[]]
+var g_transforms = [[]];
 
 // global variables
 var index = 0;
@@ -266,7 +266,6 @@ function paint(){
     for(var i = 0; i < g_points.length; i++){
 
       if(g_transforms[i][map.STATE][0] == "inactive"){
-        console.log("erase");
         continue;
       }
       var totalModelMatrix = getTotalModelMatrix(i);
