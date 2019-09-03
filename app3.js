@@ -65,7 +65,6 @@ const map = {
 }
 
 function selectObject(event){
-  console.log(parseInt(event.target.value));
   currObject = parseInt(event.target.value);
   $("#current-object-field").text("Current object: Object " + (currObject + 1));
   $("#object-title").text("Object " + (currObject + 1));
@@ -118,7 +117,7 @@ function newObject(event){
   $("#x-rotate").val(0.0);
   $("#y-rotate").val(0.0);
   $("#z-rotate").val(0.0);
-  console.log(mode);
+
 }
 
 function updateTextInput(val) {
@@ -220,15 +219,6 @@ function eraseObject(){
   paint();
 }
 
-function scalarMultip(k, array){
-  var res = new Float32Array(array);
-  for(var i = 0; i < array.length; i++){
-    res[i] = k * array[i];
-  }
-
-  return res;
-}
-
 function getTotalModelMatrix(index){
   var modelMatrix = new Matrix4();
 
@@ -300,20 +290,7 @@ function updateObjColor(value){
   console.log(r + "," + g + "," + b);
 }
 
-function undoTransforms(x, y, z){
-  //var nv = {x: x, y: y, z: z};
-  var nv = new Vector4();
-  nv.elements = [x, y, z, 1.0];
-  var test = new Matrix4();
-
-  test.elements = scalarMultip(-1, g_transforms[currObject][0]);
-  console.log(test);
-  nv = test.multiplyVector4(nv);
-
-  return nv;
-}
-
-function configureModifyModeTransforms(x, y, z){
+function reciprocalTransformsToAdd(x, y, z){
   var newVertex = {x: x, y: y, z: z};
 
   newVertex.x -= g_transforms[currObject][map.TRANSLATE][0];
@@ -350,7 +327,7 @@ function configureModifyModeTransforms(x, y, z){
 function click(ev, gl, canvas) {
   var x = ev.clientX;
   var y = ev.clientY;
-  console.log(zPos);
+  
   var z = parseFloat(zPos);
   var rect = ev.target.getBoundingClientRect() ;
 
@@ -359,7 +336,7 @@ function click(ev, gl, canvas) {
 
 
   if(g_transforms[currObject][map.MODE][0] == "modify"){
-    var modVertex = configureModifyModeTransforms(x, y, z);
+    var modVertex = reciprocalTransformsToAdd(x, y, z);
     x = modVertex.x;
     y = modVertex.y;
     z = modVertex.z;
