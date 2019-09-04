@@ -74,7 +74,7 @@ function selectObject(event){
   $("#current-object-field").text("Current object: Object " + (currObject + 1));
   $("#object-title").text("Object " + (currObject + 1));
 
-  // inserting current object's last info when it is selected
+  // inserting current object's last info when it is selected so that history is saved
   $("#x-translate").val(g_transforms[currObject][map.TRANSLATE][0]);
   $("#y-translate").val(g_transforms[currObject][map.TRANSLATE][1]);
   $("#z-translate").val(g_transforms[currObject][map.TRANSLATE][2]);
@@ -138,7 +138,10 @@ function updateTextInput(val) {
 // calculates an object's centroid: an average of all its vertices positions
 // returns a json object
 function centroid(obj){
-  var sum = {x: 0.0, y: 0.0, z: 0.0};
+  var sum = {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0 };
 
   for(var i = 0; i < g_points[obj].length; i += 3){
     sum.x += g_points[obj][i];
@@ -153,6 +156,7 @@ function centroid(obj){
 
 // initializes matrix data and additional object info in the map
 function initTransforms(){
+
   g_transforms.push([]);
   for(var i = 0; i < 5; i++){
     g_transforms[0].push([0.0, 0.0, 0.0]);
@@ -268,6 +272,8 @@ function paint(){
       if(g_transforms[i][map.STATE][0] == "inactive"){
         continue;
       }
+
+      // applies all transforms of indexed object
       var totalModelMatrix = getTotalModelMatrix(i);
       var u_ModelMatrix = gl.getUniformLocation(gl.program, 'u_ModelMatrix');
       gl.uniformMatrix4fv(u_ModelMatrix, false, totalModelMatrix.elements);
@@ -294,10 +300,15 @@ function paint(){
 
       var n = g_points[i].length/3;
 
+      // draw points so that they look like a model
       gl.drawArrays(gl.POINTS, 0, n);
 
-      if(g_transforms[i][map.MODELING_MODE][0] == "FAN") gl.drawArrays(gl.TRIANGLE_FAN, 0, n);
-      else gl.drawArrays(gl.TRIANGLE_STRIP, 0, n);
+      if(g_transforms[i][map.MODELING_MODE][0] == "FAN"){
+        gl.drawArrays(gl.TRIANGLE_FAN, 0, n);
+      }
+      else {
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, n);
+      }
     }
 }
 
@@ -309,7 +320,10 @@ function updateModelingMode(value){
 // once you apply a transformation to an object, you need to neutralize previous transforms in order to keep modeling
 // returns a json object
 function reciprocalTransformsToAdd(x, y, z){
-  var newVertex = {x: x, y: y, z: z};
+  var newVertex = {
+                  x: x,
+                  y: y,
+                  z: z };
 
   // apply reciprocal transforms to previous data in reverse order
   // translate
@@ -317,7 +331,7 @@ function reciprocalTransformsToAdd(x, y, z){
   newVertex.y -= g_transforms[currObject][map.TRANSLATE][1];
   newVertex.z -= g_transforms[currObject][map.TRANSLATE][2];
 
-  // center
+  // center: still positive because this is an auxiliar translation
   newVertex.x += g_transforms[currObject][map.CENTER][0];
   newVertex.y += g_transforms[currObject][map.CENTER][1];
   newVertex.z += g_transforms[currObject][map.CENTER][2];
@@ -328,15 +342,22 @@ function reciprocalTransformsToAdd(x, y, z){
   newVertex.z *= 1.0/g_transforms[currObject][map.SCALE][2];
 
   // rotate
-  var xProv = newVertex.x; var yProv = newVertex.y; var zProv = newVertex.z;
+  var xProv = newVertex.x;
+  var yProv = newVertex.y;
+  var zProv = newVertex.z;
   newVertex.x = xProv*Math.cos(-1*g_transforms[currObject][map.ANGLES][2]*(3.1416/180.0)) - yProv*Math.sin(-1*g_transforms[currObject][map.ANGLES][2]*(3.1416/180.0));
   newVertex.y = xProv*Math.sin(-1*g_transforms[currObject][map.ANGLES][2]*(3.1416/180.0)) + yProv*Math.cos(-1*g_transforms[currObject][map.ANGLES][2]*(3.1416/180.0));
 
-  xProv = newVertex.x; zProv = newVertex.z; yProv = newVertex.y;
+  // apply the transforms with same value at the beginning, thats why the value is stored before operations
+  xProv = newVertex.x;
+  zProv = newVertex.z;
+  yProv = newVertex.y;
   newVertex.x = xProv*Math.cos(-1*g_transforms[currObject][map.ANGLES][1]*(3.1416/180.0)) + zProv*Math.sin(-1*g_transforms[currObject][map.ANGLES][1]*(3.1416/180.0));
   newVertex.z = -xProv*Math.sin(-1*g_transforms[currObject][map.ANGLES][1]*(3.1416/180.0)) + zProv*Math.cos(-1*g_transforms[currObject][map.ANGLES][1]*(3.1416/180.0));
 
-  xProv = newVertex.x; zProv = newVertex.z; yProv = newVertex.y;
+  xProv = newVertex.x;
+  zProv = newVertex.z;
+  yProv = newVertex.y;
   newVertex.y = yProv*Math.cos(-1*g_transforms[currObject][map.ANGLES][0]*(3.1416/180.0)) - zProv*Math.sin(-1*g_transforms[currObject][map.ANGLES][0]*(3.1416/180.0));
   newVertex.z = yProv*Math.sin(-1*g_transforms[currObject][map.ANGLES][0]*(3.1416/180.0)) + zProv*Math.cos(-1*g_transforms[currObject][map.ANGLES][0]*(3.1416/180.0));
 
@@ -344,8 +365,8 @@ function reciprocalTransformsToAdd(x, y, z){
   newVertex.x += g_transforms[currObject][map.DECENTER][0];
   newVertex.y += g_transforms[currObject][map.DECENTER][1];
   newVertex.z += g_transforms[currObject][map.DECENTER][2];
-  return newVertex;
 
+  return newVertex;
 }
 
 // handles click to store vertex position
