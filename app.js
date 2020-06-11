@@ -49,6 +49,7 @@ function main(){
 
 var g_points = [[]];
 var g_colors = [[]];
+var g_transforms = [[]]
 var clicks = {Value: 0};
 var index = 0;
 var currObject = 0;
@@ -82,8 +83,6 @@ function selectObject(event){
   $("#z-rotate").val(g_transforms[currObject][7][2]);
 }
 
-var g_transforms = [[]]
-
 function getNewTransformMatrix(){
   var transformMatrix = new Float32Array([
     1.0, 0.0, 0.0, 0.0,
@@ -106,12 +105,25 @@ function newObject(event){
   }
   g_transforms[index].push([0, 0, 0]);
   g_transforms[index].push(["active"]);
+  g_transforms[index].push(["normal"]); // mode
+  g_transforms[index].push(["FAN"]); // modeling mode
   currObject = index;
   $("#current-object-field").text("Current object: Object " + (currObject + 1));
   $("#object-title").text("Object " + (currObject + 1));
   $("#sidebar").append('<button class = "object-button" onclick = "selectObject(event); " value = ' + (index) + ' id = "' + (index) +'">Object ' + (index + 1) + '</button>');
 
   //range bars in zero here
+  $("#x-translate").val(0.0);
+  $("#y-translate").val(0.0);
+  $("#z-translate").val(0.0);
+
+  $("#x-scale").val(1.0);
+  $("#y-scale").val(1.0);
+  $("#z-scale").val(1.0);
+
+  $("#x-rotate").val(0.0);
+  $("#y-rotate").val(0.0);
+  $("#z-rotate").val(0.0);
   console.log("objects: " + g_colors.length);
 }
 
@@ -143,6 +155,8 @@ function initTransforms(){
   }
   g_transforms[0].push([0, 0, 0]);
   g_transforms[0].push(["active"]);
+  g_transforms[0].push(["normal"]);
+  g_transforms[0].push(["FAN"]);
 }
 function updateTranslate(value, id){
   //mode = "modify";
@@ -156,6 +170,8 @@ function updateTranslate(value, id){
     g_transforms[currObject][0][14] = value;
   }
   mode = "modify";
+  g_transforms[currObject][9][0] = "modify";
+  $("#mode").text(g_transforms[currObject][9][0]);
   paint();
 }
 
@@ -183,6 +199,8 @@ function updateScale(value, id){
     g_transforms[currObject][1][10] = value;
   }
   mode = "modify";
+  g_transforms[currObject][9][0] = "modify";
+  $("#mode").text(g_transforms[currObject][9][0]);
   paint();
 }
 function updateRotate(value, id){
@@ -220,6 +238,8 @@ function updateRotate(value, id){
     g_transforms[currObject][5][5] = cosB;
   }
   mode = "modify";
+  g_transforms[currObject][9][0] = "modify";
+  $("#mode").text(g_transforms[currObject][9][0]);
   paint();
 }
 function eraseObject(){
@@ -264,7 +284,6 @@ function paint(){
       gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.DYNAMIC_DRAW);
 
       var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
-
       gl.vertexAttribPointer(a_Position, 3, gl.FLOAT, false, 0, 0);
       gl.enableVertexAttribArray(a_Position);
 
@@ -276,17 +295,24 @@ function paint(){
       gl.bufferData(gl.ARRAY_BUFFER, colors, gl.DYNAMIC_DRAW);
 
       var a_Color = gl.getAttribLocation(gl.program, 'a_Color');
-
       gl.vertexAttribPointer(a_Color, 3, gl.FLOAT, false, 0, 0);
       gl.enableVertexAttribArray(a_Color);
 
       var n = g_points[i].length/3;
 
       gl.drawArrays(gl.POINTS, 0, n);
-      gl.drawArrays(gl.TRIANGLE_FAN, 0, n);
+      //gl.drawArrays(gl.TRIANGLE_FAN, 0, n);
+      if(g_transforms[i][10][0] == "FAN"){
+        gl.drawArrays(gl.TRIANGLE_FAN, 0, n);
+      }
+      else {
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, n);
+      }
     }
 }
-
+function updateModelingMode(value){
+  g_transforms[currObject][10][0] = value;
+}
 function updateObjColor(value){
   console.log(value);
   var baseNumber = parseInt(value, 16);
@@ -326,16 +352,16 @@ function configureModifyModeTransforms(x, y, z){
   newVertex.z = newVertex.z * 1.0/g_transforms[currObject][1][10];
 
   var xProv = newVertex.x; var yProv = newVertex.y; var zProv = newVertex.z;
-  newVertex.x = xProv*Math.cos(-1*angleZ*(3.1416/180.0)) - yProv*Math.sin(-1*angleZ*(3.1416/180.0));
-  newVertex.y = xProv*Math.sin(-1*angleZ*(3.1416/180.0)) + yProv*Math.cos(-1*angleZ*(3.1416/180.0));
+  newVertex.x = xProv*Math.cos(-1*g_transforms[currObject][7][2]*(3.1416/180.0)) - yProv*Math.sin(-1*g_transforms[currObject][7][2]*(3.1416/180.0));
+  newVertex.y = xProv*Math.sin(-1*g_transforms[currObject][7][2]*(3.1416/180.0)) + yProv*Math.cos(-1*g_transforms[currObject][7][2]*(3.1416/180.0));
 
   xProv = newVertex.x; zProv = newVertex.z; yProv = newVertex.y;
-  newVertex.x = xProv*Math.cos(-1*angleY*(3.1416/180.0)) + zProv*Math.sin(-1*angleY*(3.1416/180.0));
-  newVertex.z = -xProv*Math.sin(-1*angleY*(3.1416/180.0)) + zProv*Math.cos(-1*angleY*(3.1416/180.0));
+  newVertex.x = xProv*Math.cos(-1*g_transforms[currObject][7][1]*(3.1416/180.0)) + zProv*Math.sin(-1*g_transforms[currObject][7][1]*(3.1416/180.0));
+  newVertex.z = -xProv*Math.sin(-1*g_transforms[currObject][7][1]*(3.1416/180.0)) + zProv*Math.cos(-1*g_transforms[currObject][7][1]*(3.1416/180.0));
 
   xProv = newVertex.x; zProv = newVertex.z; yProv = newVertex.y;
-  newVertex.y = yProv*Math.cos(-1*angleX*(3.1416/180.0)) - zProv*Math.sin(-1*angleX*(3.1416/180.0));
-  newVertex.z = yProv*Math.sin(-1*angleX*(3.1416/180.0)) + zProv*Math.cos(-1*angleX*(3.1416/180.0));
+  newVertex.y = yProv*Math.cos(-1*g_transforms[currObject][7][0]*(3.1416/180.0)) - zProv*Math.sin(-1*g_transforms[currObject][7][0]*(3.1416/180.0));
+  newVertex.z = yProv*Math.sin(-1*g_transforms[currObject][7][0]*(3.1416/180.0)) + zProv*Math.cos(-1*g_transforms[currObject][7][0]*(3.1416/180.0));
 
   newVertex.x = newVertex.x + g_transforms[currObject][6][12];
   newVertex.y = newVertex.y + g_transforms[currObject][6][13];
@@ -355,7 +381,8 @@ function click(ev, gl, canvas) {
   y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
 
 
-  if(mode == "modify"){
+  //if(mode == "modify"){
+  if(g_transforms[currObject][9][0] == "modify"){
     var modVertex = configureModifyModeTransforms(x, y, z);
     x = modVertex.x;
     y = modVertex.y;

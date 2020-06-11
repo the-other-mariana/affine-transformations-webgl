@@ -159,7 +159,7 @@ function initTransforms(){
   g_transforms[0].push([0, 0, 0]);
   g_transforms[0].push(["active"]);
   g_transforms[0].push(["normal"]);
-  g_transforms[index].push(["FAN"]);
+  g_transforms[0].push(["FAN"]);
 }
 
 function updateTranslate(value, id){
