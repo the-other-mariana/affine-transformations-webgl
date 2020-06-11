@@ -42,6 +42,7 @@ function main(){
 
 var g_points = [[]];
 var g_colors = [[]];
+var g_transforms = [[]]
 var clicks = {Value: 0};
 var index = 0;
 var currObject = 0;
@@ -63,11 +64,11 @@ const map = {
   DECENTER: 6,
   ANGLES: 7,
   STATE: 8,
-  MODE: 9
+  MODE: 9,
+  MODELING_MODE: 10
 }
 
 function selectObject(event){
-  console.log(parseInt(event.target.value));
   currObject = parseInt(event.target.value);
   $("#current-object-field").text("Current object: Object " + (currObject + 1));
   $("#object-title").text("Object " + (currObject + 1));
@@ -86,10 +87,9 @@ function selectObject(event){
   $("#z-rotate").val(g_transforms[currObject][map.ANGLES][2]);
 }
 
-var g_transforms = [[]]
 
+// function that returns identity matrix
 function getNewTransformMatrix(){
-
   var transformMatrix = new Float32Array([
     1.0, 0.0, 0.0, 0.0,
     0.0, 1.0, 0.0, 0.0,
@@ -108,9 +108,10 @@ function newObject(event){
   for(var i = 0; i < 7; i++){
     g_transforms[index].push(getNewTransformMatrix());
   }
-  g_transforms[index].push([0, 0, 0]);
-  g_transforms[index].push(["active"]);
-  g_transforms[index].push(["normal"]);
+  g_transforms[index].push([0, 0, 0]); // angles
+  g_transforms[index].push(["active"]); // state
+  g_transforms[index].push(["normal"]); // mode
+  g_transforms[index].push(["FAN"]); // modeling mode
   currObject = index;
   $("#current-object-field").text("Current object: Object " + (currObject + 1));
   $("#object-title").text("Object " + (currObject + 1));
@@ -158,7 +159,9 @@ function initTransforms(){
   g_transforms[0].push([0, 0, 0]);
   g_transforms[0].push(["active"]);
   g_transforms[0].push(["normal"]);
+  g_transforms[index].push(["FAN"]);
 }
+
 function updateTranslate(value, id){
   //mode = "modify";
   if(id == "x-translate"){
@@ -251,7 +254,6 @@ function scalarMultip(k, array){
   for(var i = 0; i < array.length; i++){
     res[i] = k * array[i];
   }
-
   return res;
 }
 
@@ -276,7 +278,7 @@ function paint(){
 
     for(var i = 0; i < g_points.length; i++){
 
-      if(g_transforms[i][8][0] == "inactive"){
+      if(g_transforms[i][map.STATE][0] == "inactive"){
         console.log("erase");
         continue;
       }
@@ -307,8 +309,19 @@ function paint(){
       var n = g_points[i].length/3;
 
       gl.drawArrays(gl.POINTS, 0, n);
-      gl.drawArrays(gl.TRIANGLE_FAN, 0, n);
+      //gl.drawArrays(gl.TRIANGLE_FAN, 0, n);
+      if(g_transforms[i][map.MODELING_MODE][0] == "FAN"){
+        gl.drawArrays(gl.TRIANGLE_FAN, 0, n);
+      }
+      else {
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, n);
+      }
     }
+}
+
+// updates the modeling mode to FAN or STRIP triangles
+function updateModelingMode(value){
+  g_transforms[currObject][map.MODELING_MODE][0] = value;
 }
 
 function updateObjColor(value){
