@@ -1,12 +1,8 @@
 # Affine Transformations with WebGL
 
-This project consists of a simple 3D modeling software. Each click creates a vertex and whenever you have a new set of 3 clicks, a triangle face is created.
-
+This project consists of a simple 3D modeling software. Each click creates a vertex and whenever you have a new set of 3 vertices, a triangle face is created.
 <br />You can translate, scale, and rotate each of the models and add new ones. You can model, then make any transformation, and continue modeling afterwards as much as you want.
-
 <br />All these transformations are done using mathematical concept of Affine Transformations, where all the changes are computed using transformation matrices. I had tons of fun while doing this project.
-
-## Specifications
 
 ## Usage
 
