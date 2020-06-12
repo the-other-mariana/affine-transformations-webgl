@@ -9,7 +9,7 @@ This project consists of a simple 3D modeling software. Each click creates a ver
 ## Usage
 
 Download this folder and store it in your computer.<br />
-Double click on the file `Example01.html` in other to open the software in your default browser.<br />
+Double click on the file `Example01.html` in order to open the software in your default browser.<br />
 Inside the file `Example01.html`, on line 99, you can change the source code between `app3.js`, `app2.js` or `app.js`.<br />
 The main and final alternative code is `app3.js`, but the other two codes do the same thing in a much more explicit and interesting way.
 
