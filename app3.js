@@ -318,6 +318,7 @@ function updateModelingMode(value){
 }
 
 // once you apply a transformation to an object, you need to neutralize previous transforms in order to keep modeling
+// in other words, use the inverse of the model matrix
 // returns a json object
 function reciprocalTransformsToAdd(x, y, z){
   var newVertex = {
