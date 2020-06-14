@@ -4,7 +4,7 @@ This project consists of a simple 3D modeling software. Each click creates a ver
 
 <br />You can translate, scale, and rotate each of the models and add new ones. You can model, then make any transformation, and continue modeling afterwards as much as you want.
 
-<br />All these transformations are done using the mathematical concept of Affine Transformations, where all the changes are computed using transformation matrices (and their inverese). I had tons of fun while doing this project.
+<br />All these transformations are done using the mathematical concept of Affine Transformations, where all the changes are computed using transformation matrices (and their inverse matrix). I had tons of fun while doing this project.
 
 ## Usage
 
