@@ -16,4 +16,8 @@ The main and final alternative code is `app3.js`, but the other three codes do t
 ## Example
 The program looks something like this:<br />
 
-![alt text](https://github.com/the-other-mariana/affine-transformations-webgl/blob/master/screenshots/screen01.png?raw=true)
+![alt text](https://github.com/the-other-mariana/affine-transformations-webgl/blob/master/screenshots/screen01.png?raw=true) <br />
+
+A demo of how the software works is shown below. I learned so much during this project, it made me so happy. <br />
+
+![alt text](https://github.com/the-other-mariana/affine-transformations-webgl/blob/master/screenshots/demo-gif.gif) <br />
